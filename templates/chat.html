@@ -1,33 +1,86 @@
 {% extends 'layout.html' %} {% block body %}
-<h1>{{ app_data['description'] }}</h1>
-<h2>Customer Chat Box</h2>
-<br />
-<h3>So far...</h3>
-{% for chat in chats %}
-<hr />
-<p>{{ chat['chat'] }}</p>
-<strong>Posted at:</strong> {{ chat['time'] }} <br />
-{% endfor %}
-<br />
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="mb-4">Chat with AI</h2>
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="chat-history mb-4 p-4 border rounded bg-light">
+                        <h3>So far...</h3>
+                        {% for chat in chats %}
+                        <hr />
+                        <p>{{ chat['chat'] }}</p>
+                        <small class="text-muted"
+                            >Posted at: {{ chat['time'] }}</small
+                        >
+                        <br />
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <h3>Pre-defined Prompts</h3>
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item">
+                            <button
+                                class="btn btn-link"
+                                onclick="usePrompt('Tell me a joke.')"
+                            >
+                                Tell me a joke
+                            </button>
+                        </li>
+                        <li class="list-group-item">
+                            <button
+                                class="btn btn-link"
+                                onclick="usePrompt('What is the weather like today?')"
+                            >
+                                What is the weather like today?
+                            </button>
+                        </li>
+                        <li class="list-group-item">
+                            <button
+                                class="btn btn-link"
+                                onclick="usePrompt('Explain quantum physics in simple terms.')"
+                            >
+                                Explain quantum physics in simple terms
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
 
-<h3>Make a chat</h3>
-<div class="container">
-    <form id="chatForm">
-        <textarea rows="4" cols="50" name="chat" id="chatInput"></textarea>
-        <input
-            class="btn btn-default"
-            type="button"
-            value="Chat"
-            onclick="sendChat()"
-        />
-    </form>
+            <div class="chat-input my-4 p-4 border rounded bg-light">
+                <form id="chatForm">
+                    <textarea
+                        class="form-control mb-3"
+                        rows="4"
+                        cols="50"
+                        name="chat"
+                        id="chatInput"
+                        placeholder="Type your message here..."
+                    ></textarea>
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        onclick="sendChat()"
+                    >
+                        Chat
+                    </button>
+                </form>
+            </div>
+            <h4>Responses:</h4>
+            <div
+                id="chatResponses"
+                class="chat-responses my-4 p-4 border rounded bg-light"
+            ></div>
+        </div>
+    </div>
 </div>
-<br />
-
-<h3>Responses:</h3>
-<div id="chatResponses"></div>
 
 <script>
+    function usePrompt(prompt) {
+        document.getElementById("chatInput").value = prompt;
+    }
+
     async function sendChat() {
         const chatInput = document.getElementById("chatInput").value;
         const response = await fetch("/get_response", {
@@ -46,5 +99,4 @@
         }
     }
 </script>
-
 {% endblock %}
