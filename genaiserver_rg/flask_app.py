@@ -8,15 +8,11 @@ import hashlib
 from functools import wraps
 import logging
 
-from sql import initialize_database, create_new_chat, delete_chat
-
 # Load environment variables from .env and .env.secret
 load_dotenv()
 load_dotenv('.env.secret')
 
 DEVELOPMENT_ENV = True
-
-initialize_database()
 
 def connect_db():
     return sqlite3.connect('serverdatabase.db')
@@ -29,7 +25,7 @@ app_data = {
     "description": "Making life easier since 2018!",
     "author": "SGG",
     "html_title": "SGG. Inc Invation that empowers",
-    "project_name": "The Learing Chat",
+    "project_name": "The Learning Chat",
     "keywords": "flask, webapp, tbasic",
 }
 
@@ -91,22 +87,9 @@ def chat():
     cur2 = g.db.execute('SELECT * FROM chats WHERE user_id = ? ORDER BY time;', (user_id,))
     chats = [dict(time=row[5], chat=row[4], title=row[3], chat_id=row[0], model_name=row[6]) for row in cur2.fetchall()]
 
-    # Create a default chat if no chats exist
-    if not chats:
-        default_title = "Default Chat"
-        default_chat = "Welcome to The Learning Chat!"
-        default_model_id = models[0]['modelid']
-        default_model_name = models[0]['modelname']
-        thetime = datetime.now()
-        g.db.execute('INSERT INTO chats (user_id, model_id, title, chat, time, model_name) VALUES (?, ?, ?, ?, ?, ?)', (user_id, default_model_id, default_title, default_chat, thetime, default_model_name))
-        g.db.commit()
-        cur2 = g.db.execute('SELECT * FROM chats WHERE user_id = ? ORDER BY time;', (user_id,))
-        chats = [dict(time=row[5], chat=row[4], title=row[3], chat_id=row[0], model_name=row[6]) for row in cur2.fetchall()]
-
     g.db.close()
 
     return render_template("chat.html", app_data=app_data, chats=chats, models=models)
-
 
 @app.route('/chat/<int:chat_id>', methods=['GET', 'POST'])
 @login_required
@@ -154,7 +137,6 @@ def open_chat(chat_id):
         logging.exception(f"Error opening chat {chat_id}: {e}")
         flash("An error occurred while trying to open the chat.")
         return redirect(url_for('chat'))
-
 
 @app.route('/get_response', methods=['POST'])
 def get_response():
@@ -206,10 +188,7 @@ def create_chat():
     cur = g.db.execute('SELECT userid FROM users WHERE username = ?', (username,))
     user_id = cur.fetchone()[0]
 
-    model_id =Here's the continuation of the corrected `flask_app.py` file:
-
-```python
-    data['model_id']
+    model_id = data['model_id']
     title = data['title']
     chat = "Welcome to your new chat!"
     thetime = datetime.now()
@@ -229,7 +208,8 @@ def create_chat():
 
 @app.route('/delete_chat/<int:chat_id>', methods=['DELETE'])
 @login_required
-def delete_chat_route(chat_id):
+def delete_chat```python
+_route(chat_id):
     try:
         username = session['username']
         g.db = connect_db()
@@ -243,7 +223,9 @@ def delete_chat_route(chat_id):
             flash("You do not have permission to delete this chat.")
             return jsonify({"error": "You do not have permission to delete this chat."}), 403
 
-        delete_chat(chat_id)
+        g.db.execute('DELETE FROM chats WHERE chat_id = ?', (chat_id,))
+        g.db.execute('DELETE FROM chat_messages WHERE chat_id = ?', (chat_id,))
+        g.db.commit()
         g.db.close()
         return jsonify({"message": "Chat deleted successfully"}), 200
     except Exception as e:
