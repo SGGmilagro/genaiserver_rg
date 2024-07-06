@@ -90,9 +90,23 @@ def chat():
 
     cur2 = g.db.execute('SELECT * FROM chats WHERE user_id = ? ORDER BY time;', (user_id,))
     chats = [dict(time=row[5], chat=row[4], title=row[3], chat_id=row[0], model_name=row[6]) for row in cur2.fetchall()]
+
+    # Create a default chat if no chats exist
+    if not chats:
+        default_title = "Default Chat"
+        default_chat = "Welcome to The Learning Chat!"
+        default_model_id = models[0]['modelid']
+        default_model_name = models[0]['modelname']
+        thetime = datetime.now()
+        g.db.execute('INSERT INTO chats (user_id, model_id, title, chat, time, model_name) VALUES (?, ?, ?, ?, ?, ?)', (user_id, default_model_id, default_title, default_chat, thetime, default_model_name))
+        g.db.commit()
+        cur2 = g.db.execute('SELECT * FROM chats WHERE user_id = ? ORDER BY time;', (user_id,))
+        chats = [dict(time=row[5], chat=row[4], title=row[3], chat_id=row[0], model_name=row[6]) for row in cur2.fetchall()]
+
     g.db.close()
 
     return render_template("chat.html", app_data=app_data, chats=chats, models=models)
+
 
 @app.route('/chat/<int:chat_id>', methods=['GET', 'POST'])
 @login_required
@@ -140,6 +154,7 @@ def open_chat(chat_id):
         logging.exception(f"Error opening chat {chat_id}: {e}")
         flash("An error occurred while trying to open the chat.")
         return redirect(url_for('chat'))
+
 
 @app.route('/get_response', methods=['POST'])
 def get_response():
