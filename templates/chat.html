@@ -1,102 +1,275 @@
 {% extends 'layout.html' %} {% block body %}
-<div class="container py-5">
-    <div class="row">
-        <div class="col-md-12">
-            <h2 class="mb-4">Chat with AI</h2>
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="chat-history mb-4 p-4 border rounded bg-light">
-                        <h3>So far...</h3>
-                        {% for chat in chats %}
-                        <hr />
-                        <p>{{ chat['chat'] }}</p>
-                        <small class="text-muted"
-                            >Posted at: {{ chat['time'] }}</small
-                        >
-                        <br />
-                        {% endfor %}
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <h3>Pre-defined Prompts</h3>
-                    <ul class="list-group mb-4">
-                        <li class="list-group-item">
-                            <button
-                                class="btn btn-link"
-                                onclick="usePrompt('Tell me a joke.')"
-                            >
-                                Tell me a joke
-                            </button>
-                        </li>
-                        <li class="list-group-item">
-                            <button
-                                class="btn btn-link"
-                                onclick="usePrompt('What is the weather like today?')"
-                            >
-                                What is the weather like today?
-                            </button>
-                        </li>
-                        <li class="list-group-item">
-                            <button
-                                class="btn btn-link"
-                                onclick="usePrompt('Explain quantum physics in simple terms.')"
-                            >
-                                Explain quantum physics in simple terms
-                            </button>
-                        </li>
-                    </ul>
-                </div>
+<div class="container-fluid">
+    <div class="row" style="height: 90vh; overflow: hidden">
+        <!-- Sidebar -->
+        <div class="col-md-2 d-flex align-items-stretch p-0">
+            <div
+                class="list-group sidebar d-flex flex-column justify-content-start w-100"
+                style="height: 100%; border-radius: 10px 0 0 10px"
+            >
+                {% if chats %} {% for chat in chats %}
+                <a
+                    href="{{ url_for('open_chat', chat_id=chat.chat_id) }}"
+                    class="list-group-item list-group-item-action sidebar-item"
+                >
+                    {{ chat.title }}
+                </a>
+                {% endfor %} {% else %}
+                <p class="list-group-item">
+                    No chats available. Start a new conversation!
+                </p>
+                {% endif %}
             </div>
-
-            <div class="chat-input my-4 p-4 border rounded bg-light">
-                <form id="chatForm">
-                    <textarea
-                        class="form-control mb-3"
-                        rows="4"
-                        cols="50"
-                        name="chat"
-                        id="chatInput"
-                        placeholder="Type your message here..."
-                    ></textarea>
-                    <button
-                        type="button"
-                        class="btn btn-primary"
-                        onclick="sendChat()"
+        </div>
+        <!-- Chat Interface Placeholder -->
+        <div
+            class="col-md-10 d-flex flex-column justify-content-center align-items-center p-0"
+            style="
+                height: 100%;
+                background: linear-gradient(
+                    135deg,
+                    #ff0000,
+                    #ff4d4d,
+                    #ff6666,
+                    #ff9999
+                );
+                background-size: 400% 400%;
+                animation: gradient 15s ease infinite;
+                border-radius: 0 10px 10px 0;
+            "
+        >
+            <div
+                class="d-flex flex-column justify-content-center align-items-center"
+                style="flex-grow: 1; padding: 50px"
+            >
+                {% if chats %}
+                <a href="{{ url_for('open_chat', chat_id=chats[0].chat_id) }}">
+                    <h1
+                        class="text-light"
+                        style="font-family: &quot;Georgia&quot;, serif"
                     >
-                        Chat
-                    </button>
+                        The Learning Chat
+                    </h1>
+                </a>
+                {% else %}
+                <h1
+                    class="text-light"
+                    style="font-family: &quot;Georgia&quot;, serif"
+                >
+                    The Learning Chat
+                </h1>
+                {% endif %}
+            </div>
+            <div class="mb-4 d-flex justify-content-center w-100">
+                <button
+                    class="btn btn-md btn-gradient mt-3 responsive-btn"
+                    onclick="promptNewChat()"
+                >
+                    Create New Chat
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Chat Modal -->
+<div
+    class="modal fade"
+    id="newChatModal"
+    tabindex="-1"
+    role="dialog"
+    aria-labelledby="newChatModalLabel"
+    aria-hidden="true"
+>
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newChatModalLabel">
+                    Create New Chat
+                </h5>
+                <button
+                    type="button"
+                    class="close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                >
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="newChatForm">
+                    <div class="form-group">
+                        <label for="chatTitle">Chat Title</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="chatTitle"
+                            name="chatTitle"
+                            required
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label for="modelSelect">Model</label>
+                        <select
+                            class="form-control"
+                            id="modelSelect"
+                            name="modelSelect"
+                        >
+                            {% for model in models %}
+                            <option value="{{ model['modelid'] }}">
+                                {{ model['modelname'] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </form>
             </div>
-            <h4>Responses:</h4>
-            <div
-                id="chatResponses"
-                class="chat-responses my-4 p-4 border rounded bg-light"
-            ></div>
+            <div class="modal-footer">
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    Close
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    onclick="createNewChat()"
+                >
+                    Create Chat
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    function usePrompt(prompt) {
-        document.getElementById("chatInput").value = prompt;
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll("a").forEach(function (anchor) {
+            anchor.addEventListener("click", function (event) {
+                event.preventDefault();
+                let linkLocation = this.href;
+                document.body.classList.add("fade-out");
+                setTimeout(function () {
+                    window.location = linkLocation;
+                }, 500);
+            });
+        });
+    });
+
+    function promptNewChat() {
+        const modal = new bootstrap.Modal(
+            document.getElementById("newChatModal"),
+        );
+        modal.show();
     }
 
-    async function sendChat() {
-        const chatInput = document.getElementById("chatInput").value;
-        const response = await fetch("/get_response", {
+    async function createNewChat() {
+        const title = document.getElementById("chatTitle").value;
+        const model_id = document.getElementById("modelSelect").value;
+
+        const response = await fetch("/create_chat", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ prompt: chatInput }),
+            body: JSON.stringify({
+                title: title,
+                model_id: model_id,
+            }),
         });
-        const data = await response.json();
-        const chatResponses = document.getElementById("chatResponses");
-        if (data.response) {
-            chatResponses.innerHTML += "<p>" + data.response + "</p>";
-        } else {
-            chatResponses.innerHTML += "<p>Error: " + data.error + "</p>";
+
+        if (response.ok) {
+            location.reload();
         }
     }
 </script>
+
+<style>
+    @keyframes gradient {
+        0% {
+            background-position: 0% 50%;
+        }
+        50% {
+            background-position: 100% 50%;
+        }
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+
+    body {
+        opacity: 1;
+        transition: opacity 0.5s ease-in-out;
+    }
+
+    body.fade-out {
+        opacity: 0;
+    }
+
+    .sidebar {
+        background-color: #c8d6e5;
+        height: 100%;
+        flex-grow: 1;
+    }
+
+    .sidebar-item {
+        background-color: #1e3c72;
+        color: white;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        padding: 10px;
+        text-align: center;
+        transition:
+            background-color 0.3s,
+            color 0.3s;
+    }
+
+    .sidebar-item:hover {
+        background-color: #dce8f6;
+        color: black;
+    }
+
+    .btn-gradient {
+        background: linear-gradient(135deg, #ff6666, #ff3333);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        padding: 10px 20px;
+        font-size: 16px;
+        transition:
+            background 0.3s,
+            transform 0.3s;
+    }
+
+    .btn-gradient:hover {
+        background: linear-gradient(135deg, #ff3333, #ff0000);
+        transform: translateY(-2px);
+    }
+
+    .responsive-btn {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+        .list-group-item {
+            font-size: 0.9rem;
+        }
+
+        .responsive-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .sidebar {
+            max-width: 150px;
+        }
+    }
+
+    h1 {
+        font-family: "Georgia", serif;
+    }
+</style>
 {% endblock %}
