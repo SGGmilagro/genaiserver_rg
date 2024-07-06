@@ -12,7 +12,7 @@ distro==1.9.0
 Flask==3.0.3
 Flask-Cors==4.0.1
 frozenlist==1.4.1
--e git+ssh://git@github.com/SGGmilagro/genailib_rg.git@ea5f6f8cd14b553e574b6c8fc6053a2f3503f467#egg=genailib_rg
+-e git+https://github.com/SGGmilagro/genailib_rg.git@ea5f6f8cd14b553e574b6c8fc6053a2f3503f467#egg=genailib_rg
 h11==0.14.0
 httpcore==1.0.5
 httpx==0.27.0
