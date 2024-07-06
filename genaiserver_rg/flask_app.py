@@ -20,6 +20,8 @@ def connect_db():
 app = Flask(__name__, template_folder='../templates')
 app.secret_key = os.getenv("FLASK_SECRET_KEY")
 
+app.config['DEBUG'] = True
+
 app_data = {
     "name": "The learning chat",
     "description": "Making life easier since 2018!",
