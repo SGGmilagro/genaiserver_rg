@@ -208,8 +208,7 @@ def create_chat():
 
 @app.route('/delete_chat/<int:chat_id>', methods=['DELETE'])
 @login_required
-def delete_chat```python
-_route(chat_id):
+def delete_chat(chat_id):
     try:
         username = session['username']
         g.db = connect_db()
@@ -231,6 +230,7 @@ _route(chat_id):
     except Exception as e:
         logging.exception(f"Error deleting chat {chat_id}: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
