@@ -208,25 +208,8 @@ def create_chat():
 
     chat = data.get('chat', '')
     model_id = data['model_id']
-    cur = g.db.execute('SELECT modelname FROM models WHERE modelid = ?', (model_id,))
-    modelHere's the updated `flask_app.py` with the final part included and corrected:
-
-```python
-@app.route('/create_chat', methods=['POST'])
-@login_required
-def create_chat():
-    data = request.get_json()
-    if not data or 'model_id' not in data or 'title' not in data:
-        return jsonify({"error": "Invalid data"}), 400
-
-    username = session['username']
-    g.db = connect_db()
-    cur = g.db.execute('SELECT userid FROM users WHERE username = ?', (username,))
-    user_id = cur.fetchone()[0]
-
-    chat = data.get('chat', '')
-    model_id = data['model_id']
-    cur = g.db.execute('SELECT modelname FROM models WHERE modelid = ?', (model_id,))
+   ```python
+cur = g.db.execute('SELECT modelname FROM models WHERE modelid = ?', (model_id,))
     model_name = cur.fetchone()[0]
 
     create_new_chat(user_id, model_id, data['title'], chat, model_name)
