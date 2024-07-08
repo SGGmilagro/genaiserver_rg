@@ -2,7 +2,6 @@
 .git
 
 # Ignore pixi environments
-.pixi
 
 # Ignore secrets
 .env.secret
@@ -19,7 +18,7 @@ tmp*
 tags
 
 # Ignore Python bytecode
-__pycache__/
+_pycache_/
 *.py[cod]
 *$py.class
 
