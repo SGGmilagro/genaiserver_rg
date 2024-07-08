@@ -7,6 +7,7 @@ from genailib_rg.genailib_rg_sub import get_chat_responses
 import hashlib
 from functools import wraps
 import logging
+import click
 
 from genaiserver_rg.config import get_configs
 from genaiserver_rg.sql import initialize_database, create_new_chat
@@ -16,7 +17,7 @@ load_dotenv()
 load_dotenv('.env.secret')
 
 app_data = {
-    "name": "The learning chat",
+    "name": "The Learning chat",
     "description": "Making life easier since 2018!",
     "author": "SGG",
     "html_title": "SGG. Inc Invation that empowers",
@@ -70,10 +71,9 @@ def create_app():
     def verify_password(stored_password, provided_password):
         return stored_password == hash_password(provided_password)
 
-
-    @app.route("/index")
+    @app.route("/")
     def index():
-            return render_template("index.html", app_data= app_data)
+        return render_template("index.html", app_data=app_data)
 
     @app.route("/about")
     def about():
@@ -133,18 +133,9 @@ def create_app():
     def open_chat(chat_id):
         try:
             db = get_db()
-            username = session.get('username')
-            if not username:
-                flash("User not logged in.")
-                return redirect(url_for('index'))
-
+            username = session['username']
             cur = db.execute('SELECT userid FROM users WHERE username = ?', (username,))
-            result = cur.fetchone()
-            if result is None:
-                flash("User not found.")
-                return redirect(url_for('index'))
-
-            user_id = result['userid']
+            user_id = cur.fetchone()[0]
 
             cur = db.execute('SELECT * FROM chats WHERE chat_id = ?', (chat_id,))
             chat = cur.fetchone()
@@ -156,23 +147,8 @@ def create_app():
 
             chat_data = dict(time=chat['time'], chat=chat['chat'], title=chat['title'], chat_id=chat['chat_id'], model_name=chat['model_name'])
 
-            cur_messages = db.execute('SELECT sender, message FROM chat_messages WHERE chat_id = ? ORDER BY timestamp DESC LIMIT 10', (chat_id,))
+            cur_messages = db.execute('SELECT sender, message FROM chat_messages WHERE chat_id = ? ORDER BY timestamp ASC', (chat_id,))
             messages = [{'sender': row['sender'], 'message': row['message']} for row in cur_messages.fetchall()]
-            messages.reverse()  # Reverse to show the latest message at the bottom
-
-            if request.method == 'POST':
-                new_message = request.form['chat']
-                sender = 'You'
-                db.execute('INSERT INTO chat_messages (chat_id, sender, message, timestamp) VALUES (?, ?, ?, ?)',
-                           (chat_id, sender, new_message, datetime.now()))
-                db.commit()
-                messages.append({'sender': sender, 'message': new_message})
-
-                bot_response = get_chat_responses(new_message, model=chat_data['model_name'])
-                db.execute('INSERT INTO chat_messages (chat_id, sender, message, timestamp) VALUES (?, ?, ?, ?)',
-                           (chat_id, 'Ellish', bot_response, datetime.now()))
-                db.commit()
-                messages.append({'sender': 'Ellish', 'message': bot_response})
 
             cur2 = db.execute('SELECT * FROM chats WHERE user_id = ? ORDER BY time;', (user_id,))
             chats = [dict(time=row['time'], chat=row['chat'], title=row['title'], chat_id=row['chat_id'], model_name=row['model_name']) for row in cur2.fetchall()]
@@ -210,7 +186,7 @@ def create_app():
             db.execute('INSERT INTO chat_messages (chat_id, sender, message, timestamp) VALUES (?, ?, ?, ?)',
                        (chat_id, 'You', prompt, datetime.now()))
             db.execute('INSERT INTO chat_messages (chat_id, sender, message, timestamp) VALUES (?, ?, ?, ?)',
-                       (chat_id, 'Ellish', chat_text, datetime.now()))
+                       (chat_id, 'The Learning Chat', chat_text, datetime.now()))
 
             db.commit()
 

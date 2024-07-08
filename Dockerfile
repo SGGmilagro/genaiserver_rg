@@ -1,13 +1,9 @@
-# Use an official Python runtime as a parent image
 FROM ghcr.io/prefix-dev/pixi:latest
 
-# Set the working directory in the container
 WORKDIR /app
+COPY . /app
 
-# Copy the current directory contents into the container at /app
-COPY . /app/
-
-# Install pip and pixi
+# Install Python and pip
 RUN apt-get update && \
     apt-get install -y python3 python3-pip
 
@@ -18,18 +14,14 @@ RUN pip3 install cython wheel
 COPY requirements.txt /app/
 RUN pip3 install -r requirements.txt
 
-# Ensure the storage directory exists
-RUN mkdir -p /app/storage
-
-# Remove any existing pixi environment directory
-RUN rm -rf /app/.pixi/envs/default
-
-# Add dependencies using pixi
+# Install pixi dependencies
 RUN pixi install
 
 # Set environment variables
 ENV DATABASE_FILE=/app/storage/serverdatabase.db
 ENV ENV=prod
 
-# Command to run the application
-CMD ["gunicorn", "genaiserver_rg.flask_app:app", "--bind", "0.0.0.0:5000"]
+# Ensure the storage directory exists
+RUN mkdir -p /app/storage
+
+CMD pixi run populate && gunicorn genaiserver_rg.flask_app:app --bind 0.0.0.0:5000

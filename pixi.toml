@@ -5,7 +5,7 @@ platforms = ["osx-arm64", "linux-64", "linux-aarch64"]
 
 [tasks]
 populate = "python genaiserver_rg/sql.py"
-server = "gunicorn -w 4 -b 0.0.0.0:5001 genaiserver_rg.flask_app:app || python genaiserver_rg/flask_app.py"
+server = "gunicorn -w 4 -b 0.0.0.0:5000 genaiserver_rg.flask_app:app || python genaiserver_rg/flask_app.py"
 devserver = "ENV=dev python -m genaiserver_rg.flask_app"
 
 [dependencies]
