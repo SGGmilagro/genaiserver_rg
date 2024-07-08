@@ -2,6 +2,7 @@
 .git
 
 # Ignore pixi environments
+.pixi
 
 # Ignore secrets
 .env.secret
